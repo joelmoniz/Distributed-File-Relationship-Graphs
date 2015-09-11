@@ -16,18 +16,24 @@ map<string, set<string> > get_relevant_words_from_files() {
   printf("%d processors\n", omp_get_num_procs());
   setup_stopwords();
 
+  string filelist = "files.txt";
 
-  queue<string> filelist;
+  int total_size = 0;
 
+  queue<string> file_queue = load_file_list(filelist, total_size);
 
-  return slave_relevant_find(filelist);
+  return slave_relevant_find(file_queue, total_size);
 }
 
-map<string, set<string> > slave_relevant_find(queue<string> &filelist) {
+map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int total_size) {
+
+  printf("%d\n", total_size);
+
   bool done = false;
   omp_set_num_threads(omp_get_num_procs() + 1);
   map<string, set<string> > m;
-  #pragma omp parallel shared(filelist, m, done)
+
+  #pragma omp parallel shared(file_queue, m, done)
   {
     if (omp_get_thread_num() == 0) {
       printf("%d threads\n", omp_get_num_threads());
@@ -38,10 +44,10 @@ map<string, set<string> > slave_relevant_find(queue<string> &filelist) {
       while (!done) {
         #pragma omp critical(queuepop)
         {
-          filelist.push("./medium.txt");
-          filelist.push("./medium.txt");
-          filelist.push("./medium.txt");
-          filelist.push("./medium.txt");
+          file_queue.push("./medium.txt");
+          file_queue.push("./medium.txt");
+          file_queue.push("./medium.txt");
+          file_queue.push("./medium.txt");
         }
         sleep(2);
         printf("Final\n");
@@ -58,9 +64,9 @@ map<string, set<string> > slave_relevant_find(queue<string> &filelist) {
         string file;
         #pragma omp critical(queuepop)
         {
-          if (!filelist.empty()) {
-            file = filelist.front();
-            filelist.pop();
+          if (!file_queue.empty()) {
+            file = file_queue.front();
+            file_queue.pop();
             q_not_empty = true;
           }
           else
@@ -78,6 +84,25 @@ map<string, set<string> > slave_relevant_find(queue<string> &filelist) {
     }
   }
   return m;
+}
+
+
+queue<string> load_file_list(string filelist, int &total_size) {
+
+  FILE *fp1;
+  char oneword[100];
+
+  fp1 = fopen(filelist.c_str(), "r");
+
+  int file_size = 0;
+
+  queue<string> file_queue;
+  while (fscanf(fp1, "%s %d", oneword, &file_size) != EOF) {
+    file_queue.push(string(oneword));
+    total_size += file_size;
+  }
+
+  return file_queue;
 }
 
 void test_phase2_mp() {
