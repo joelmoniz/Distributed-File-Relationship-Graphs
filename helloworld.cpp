@@ -1,4 +1,4 @@
-// #include "mpi.h"
+#include "mpi.h"
 #include "relevant_extractor.h"
 #include <omp.h>
 #include <stdio.h> 
@@ -7,10 +7,9 @@
 using namespace std;
 
 
-/*
 int main(int argc, char *argv[]) {
-  int rank, size;
-  MPI_Init(&argc, &argv);
+  int rank, size, perm;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &perm);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
   // if (rank == 0) {
@@ -20,17 +19,18 @@ int main(int argc, char *argv[]) {
   // else 
   //   printf("Hello World from process %d\n", rank);
 
-  test_relevant();
-
+  // printf("TEST!!!\n");
+  test_phase2_mp();
 
   MPI_Finalize();
 }
-*/
 
+/*
 int main(int argc, char *argv[]) {
   // get_relevant_words_from_files();
   test_phase2_mp();
 }
+*/
 
 /*
 int main(int argc, char *argv[]) {

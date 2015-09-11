@@ -1,8 +1,8 @@
 #include "relevant_extractor.h"
+#include "mpi.h"
 #include <omp.h>
 #include <map>
 #include <set>
-#include <omp.h>
 #include <stdio.h>
 #include <queue>
 #include <unistd.h>
@@ -35,7 +35,12 @@ map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int tot
 
   #pragma omp parallel shared(file_queue, m, done)
   {
-    if (omp_get_thread_num() == 0) {
+    int is_master = 0;
+
+    MPI_Is_thread_main(&is_master);
+    if (is_master)
+      // #pragma omp master
+    {
       printf("%d threads\n", omp_get_num_threads());
       printf("Sleeping\n");
       sleep(2);
