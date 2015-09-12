@@ -9,6 +9,7 @@
 
 map<string, set<string> > get_relevant_words_from_files();
 void test_phase2_mp();
+map<string, set<string> > master_relevant_find(queue<string> &file_queue, int total_size);
 map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int total_size);
 queue<string> load_file_list(string filelist, int &total_size);
 #endif

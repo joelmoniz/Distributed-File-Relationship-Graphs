@@ -1,0 +1,5 @@
+*.txt
+*.out
+*~
+Queue.h
+test.cpp
