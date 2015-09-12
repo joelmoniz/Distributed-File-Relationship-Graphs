@@ -21,7 +21,7 @@ map<string, set<string> > get_relevant_words_from_files() {
 
   int total_size = 0;
 
-  queue<string> file_queue = load_file_list(filelist, total_size);
+  queue<pair<string, int> > file_queue = load_file_list(filelist, total_size);
 
   if (rank == 0) {
     return master_relevant_find(file_queue, total_size);
@@ -31,7 +31,7 @@ map<string, set<string> > get_relevant_words_from_files() {
   }
 }
 
-map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int total_size) {
+map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_queue, int total_size) {
 
   printf("%d\n", total_size);
 
@@ -54,10 +54,14 @@ map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int tot
       while (!done) {
         #pragma omp critical(queuepop)
         {
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
         }
         sleep(2);
         printf("Final\n");
@@ -71,11 +75,16 @@ map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int tot
       // but master hasn't assigned them yet
       while (q_not_empty || !done) {
         // printf("Here\n");
+        pair<string, int> file_queue_pair;
         string file;
+        int file_size;
         #pragma omp critical(queuepop)
         {
           if (!file_queue.empty()) {
-            file = file_queue.front();
+            file_queue_pair = file_queue.front();
+            file = file_queue_pair.first;
+            file_size = file_queue_pair.second;
+            total_size -= file_size;
             file_queue.pop();
             q_not_empty = true;
           }
@@ -93,11 +102,12 @@ map<string, set<string> > slave_relevant_find(queue<string> &file_queue, int tot
       }
     }
   }
+  printf("Done file size: %d\n", total_size);
   return m;
 }
 
 
-map<string, set<string> > master_relevant_find(queue<string> &file_queue, int total_size) {
+map<string, set<string> > master_relevant_find(queue<pair<string, int> > &file_queue, int total_size) {
 
   printf("%d\n", total_size);
 
@@ -111,7 +121,6 @@ map<string, set<string> > master_relevant_find(queue<string> &file_queue, int to
 
     MPI_Is_thread_main(&is_master);
     if (is_master)
-      // #pragma omp master
     {
       printf("%d threads\n", omp_get_num_threads());
       printf("Sleeping\n");
@@ -121,10 +130,14 @@ map<string, set<string> > master_relevant_find(queue<string> &file_queue, int to
       while (!done) {
         #pragma omp critical(queuepop)
         {
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
-          file_queue.push("./medium.txt");
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
+          file_queue.push(make_pair("./medium.txt", 20));
+          total_size += 20;
         }
         sleep(2);
         printf("Final\n");
@@ -138,11 +151,16 @@ map<string, set<string> > master_relevant_find(queue<string> &file_queue, int to
       // but master hasn't assigned them yet
       while (q_not_empty || !done) {
         // printf("Here\n");
+        pair<string, int> file_queue_pair;
         string file;
+        int file_size;
         #pragma omp critical(queuepop)
         {
           if (!file_queue.empty()) {
-            file = file_queue.front();
+            file_queue_pair = file_queue.front();
+            file = file_queue_pair.first;
+            file_size = file_queue_pair.second;
+            total_size -= file_size;
             file_queue.pop();
             q_not_empty = true;
           }
@@ -160,11 +178,12 @@ map<string, set<string> > master_relevant_find(queue<string> &file_queue, int to
       }
     }
   }
+  printf("Done file size: %d\n", total_size);
   return m;
 }
 
 
-queue<string> load_file_list(string filelist, int &total_size) {
+queue<pair<string, int> > load_file_list(string filelist, int &total_size) {
 
   FILE *fp1;
   char oneword[100];
@@ -173,9 +192,9 @@ queue<string> load_file_list(string filelist, int &total_size) {
 
   int file_size = 0;
 
-  queue<string> file_queue;
+  queue<pair<string, int> > file_queue;
   while (fscanf(fp1, "%s %d", oneword, &file_size) != EOF) {
-    file_queue.push(string(oneword));
+    file_queue.push(make_pair(string(oneword), file_size));
     total_size += file_size;
   }
 
