@@ -18,7 +18,7 @@
 #define MAX_PATH_SIZE 255
 
 map<string, set<string> > get_relevant_words_from_files();
-void test_phase2_mp();
+void test_phase2_mpi();
 map<string, set<string> > master_relevant_find(queue<pair<string, int> > &file_queue, int total_size);
 map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_queue, int total_size);
 queue<pair<string, int> > load_file_list(string filelist, int &total_size);

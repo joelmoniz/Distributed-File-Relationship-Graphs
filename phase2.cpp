@@ -4,12 +4,14 @@
 #include <map>
 #include <set>
 #include <stdio.h>
+#include <sstream>
 #include <queue>
 #include <string.h>
 #include <algorithm>
 #include <unistd.h>
 #include "phase2.h"
 #include "mpiproperties.h"
+#include <stdexcept>
 
 using namespace std;
 
@@ -21,7 +23,9 @@ map<string, set<string> > get_relevant_words_from_files() {
   }
   setup_stopwords();
 
-  string filelist = "files.txt";
+  stringstream sstm;
+  sstm << "./data/node" << rank << "_files.txt";
+  string filelist =  sstm.str();
 
   int total_size = 0;
 
@@ -96,7 +100,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
 
             for (int i = 0; i < actual; ++i)
             {
-              MPI_Send(fl[i].first.c_str(), fl[i].first.length(), MPI_CHAR, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
+              MPI_Send(fl[i].first.c_str(), fl[i].first.length()+1, MPI_CHAR, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
               MPI_Send(&fl[i].second, 1, MPI_INT, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
             }
 
@@ -182,20 +186,25 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
         }
 
         if (q_not_empty) {
-          set<string> rel = get_relevant_words(file);
+          // set<string> rel = get_relevant_words(file);
+          set<string> rel;
 
           if (QUEUE_DEBUG)
             printf("Processing...\n");
 
-          // rel is empty if the file couldn't be opened
-          // TODO: handle this better than this hacky empty set
-          if (!rel.empty()) {
+          try {
+            rel = get_relevant_words(file);
             #pragma omp critical(mapupdate)
             m[file] = rel;
             if (INITIAL_DEBUG) {
               printf("Extracting: %s\n", file.c_str());
             }
           }
+          catch (exception &e) {
+            printf("Error: No file %s\n", file.c_str());
+          }
+
+
         }
       }
     }
@@ -286,11 +295,21 @@ queue<pair<string, int> > load_file_list(string filelist, int &total_size) {
   int file_size = 0;
 
   queue<pair<string, int> > file_queue;
+
+  if (fp1 == NULL) {
+    printf("File %s not found. Aborting...\n", filelist.c_str());
+    MPI_Abort(MPI_COMM_WORLD, 1);
+
+    // TODO: Is this even needed?
+    return file_queue;
+  }
+
   while (fscanf(fp1, "%s %d", oneword, &file_size) != EOF) {
     file_queue.push(make_pair(string(oneword), file_size));
     // printf("Rank:%d %s\n", rank, oneword);
     total_size += file_size;
   }
+
 
   return file_queue;
 }
@@ -326,11 +345,15 @@ map<string, set<string> > serial_relevant_find(queue<pair<string, int> > &file_q
 
   map<string, set<string> > m;
   while (!file_queue.empty()) {
-    set<string> rel = get_relevant_words(file_queue.front().first);
+    try {
+      set<string> rel = get_relevant_words(file_queue.front().first);
 
-    if (!rel.empty()) {
       m[file_queue.front().first] = rel;
     }
+    catch (exception &e) {
+      printf("Error: No file %s\n", file_queue.front().first.c_str());
+    }
+
     file_queue.pop();
   }
   return m;
@@ -344,7 +367,7 @@ map<string, set<string> > get_relevant_words_in_serial() {
   }
   setup_stopwords();
 
-  string filelist = "files.txt";
+  string filelist = "./data/files.txt";
 
   int total_size = 0;
 

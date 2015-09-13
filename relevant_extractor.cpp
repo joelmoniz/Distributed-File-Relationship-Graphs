@@ -9,6 +9,7 @@
 #include <functional>
 #include <algorithm>
 #include "relevant_extractor.h"
+#include <stdexcept>
 
 #define PRINT_WORDS 0
 
@@ -61,7 +62,7 @@ set<string> get_relevant_words(string f) {
   set<string> rel;
 
   if (fp1 == NULL)
-    return rel;
+    throw runtime_error("Could not open file");
 
   // printf("%s\n", f.c_str());
   while (fscanf(fp1,"%s",oneword) != EOF) {
