@@ -255,7 +255,7 @@ void master_handle_communication() {
     }
     else {
       // TODO: Better heuristic?
-      int take = (file_size_left[size - 2].first - left) / (size - 1);
+      int take = (file_size_left[size - 2].first - left) / (2*(size - 1));
       if (take < 1) {
         node_files[0] = STAY_PUT;
       }
