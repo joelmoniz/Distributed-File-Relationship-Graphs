@@ -128,7 +128,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
 
             if (QUEUE_DEBUG)
               printf("From: %d In: %d %s\n", node_files[0], rank, fname);
-            
+
             memset(fname, '\0', MAX_PATH_SIZE);
           }
 
@@ -295,7 +295,7 @@ queue<pair<string, int> > load_file_list(string filelist, int &total_size) {
   return file_queue;
 }
 
-void test_phase2_mp() {
+void test_phase2_mpi() {
 
   // if (rank == 0) {
   //   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -317,4 +317,57 @@ void test_phase2_mp() {
   }
 
 
+}
+
+// ----------------- Serial Code ----------------------------------------------------
+// ----------------- For benchmarking purposes --------------------------------------
+
+map<string, set<string> > serial_relevant_find(queue<pair<string, int> > &file_queue, int total_size) {
+
+  map<string, set<string> > m;
+  while (!file_queue.empty()) {
+    set<string> rel = get_relevant_words(file_queue.front().first);
+
+    if (!rel.empty()) {
+      m[file_queue.front().first] = rel;
+    }
+    file_queue.pop();
+  }
+  return m;
+}
+
+map<string, set<string> > get_relevant_words_in_serial() {
+
+  // the one is the master, handling communication, etc.
+  if (INITIAL_DEBUG) {
+    printf("%d processors\n", omp_get_num_procs());
+  }
+  setup_stopwords();
+
+  string filelist = "files.txt";
+
+  int total_size = 0;
+
+  queue<pair<string, int> > file_queue = load_file_list(filelist, total_size);
+
+  return serial_relevant_find(file_queue, total_size);
+}
+
+
+
+void test_phase2_without_mpi() {
+
+  // if (rank == 0) {
+  //   MPI_Comm_size(MPI_COMM_WORLD, &size);
+  //   printf("No. of processes created %d\n",size);
+  // }
+  // else
+  //   printf("Hello World from process %d\n", rank);
+
+
+  map<string, set<string> > m = get_relevant_words_in_serial();
+  for (map<string, set<string> >::iterator i = m.begin(); i != m.end(); ++i)
+  {
+    printf("Rank: %d;  %s  %d\n", rank, (i->first).c_str(), (int)(i->second).size());
+  }
 }
