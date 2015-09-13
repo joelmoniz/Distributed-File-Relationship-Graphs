@@ -8,6 +8,9 @@
 #include <utility>
 #include <map>
 
+#define UPDATE_FREQ 1
+#define MAX_PATH_SIZE 255
+
 map<string, set<string> > get_relevant_words_from_files();
 void test_phase2_mp();
 map<string, set<string> > master_relevant_find(queue<pair<string, int> > &file_queue, int total_size);

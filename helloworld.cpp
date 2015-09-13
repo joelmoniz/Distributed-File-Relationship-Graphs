@@ -7,14 +7,15 @@
 
 using namespace std;
 
-int rank;
+int rank, size;
 
 void test_mpi();
 
 int main(int argc, char *argv[]) {
-  int size, perm;
+  int perm;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &perm);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   test_phase2_mp();
   // test_mpi();
