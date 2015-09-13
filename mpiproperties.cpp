@@ -8,7 +8,7 @@ MPI_Request req;
 using namespace std;
 
 void end_wait(int sig) {
-  printf("Cancelling %d...\n", sig);
+  // printf("Cancelling %d...\n", sig);
   MPI_Cancel(&req);
 }
 
@@ -33,8 +33,10 @@ int timed_request_for_communication(int &src) {
   MPI_Wait(&req, &status);
   alarm(0);
 
-  if (files != TIME_OUT)
+  if (files != TIME_OUT) {
     src = status.MPI_SOURCE;
+    // printf("No time out thanks to %d\n", src);
+  }
 
   return files;
 }

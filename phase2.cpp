@@ -5,6 +5,7 @@
 #include <set>
 #include <stdio.h>
 #include <queue>
+#include <string.h>
 #include <algorithm>
 #include <unistd.h>
 #include "phase2.h"
@@ -15,7 +16,9 @@ using namespace std;
 map<string, set<string> > get_relevant_words_from_files() {
 
   // the one is the master, handling communication, etc.
-  printf("%d processors\n", omp_get_num_procs());
+  if (INITIAL_DEBUG) {
+    printf("%d processors\n", omp_get_num_procs());
+  }
   setup_stopwords();
 
   string filelist = "files.txt";
@@ -27,9 +30,15 @@ map<string, set<string> > get_relevant_words_from_files() {
   return slave_relevant_find(file_queue, total_size);
 }
 
+void debug_mpi_dest(int loc, int dest) {
+  if (DEBUG_MPI_DEST) {
+    printf("Src: %d  Locn: %d Dest: %d\n", rank, loc, dest);
+  }
+}
+
 map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_queue, int total_size) {
 
-  printf("%d\n", total_size);
+  // printf("%d\n", total_size);
 
   bool done = false;
   omp_set_num_threads(omp_get_num_procs() + 1);
@@ -48,6 +57,8 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
         // Send status to master, receive update
         // node_files => node id, number of files to request
         int node_files[2];
+
+        debug_mpi_dest(-1, 0);
         MPI_Send(&total_size, 1, MPI_INT, 0, MASTER_TAG, MPI_COMM_WORLD);
         MPI_Status status;
         MPI_Recv(node_files, 2, MPI_INT, 0, MASTER_TAG, MPI_COMM_WORLD, &status);
@@ -60,24 +71,30 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
           int src, num_requested_files;
           num_requested_files = timed_request_for_communication(src);
 
+          debug_mpi_dest(0, -1);
+
           if (num_requested_files == TIME_OUT)
             continue;
           else {
+            // printf("%d files requested\n", num_requested_files);
             vector<pair<string, int> > fl(num_requested_files);
             int actual;
             #pragma omp critical(queuepop)
             {
               actual = min((int)file_queue.size(), num_requested_files);
-              for (int i = 0; i < num_requested_files; ++i)
+              for (int i = 0; i < actual; ++i)
               {
                 fl[i] = file_queue.front();
                 file_queue.pop();
+                total_size -= fl[i].second;
               }
             }
 
+
+            debug_mpi_dest(1, src);
             MPI_Send(&actual, 1, MPI_INT, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
 
-            for (int i = 0; i < num_requested_files; ++i)
+            for (int i = 0; i < actual; ++i)
             {
               MPI_Send(fl[i].first.c_str(), fl[i].first.length(), MPI_CHAR, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
               MPI_Send(&fl[i].second, 1, MPI_INT, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
@@ -87,33 +104,42 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
         }
         else {
           // ping node, get back reply
-
           int actual_size;
 
+          debug_mpi_dest(2, node_files[0]);
           MPI_Send(&node_files[1], 1, MPI_INT, node_files[0], INTER_SLAVE_TAG, MPI_COMM_WORLD);
+          // printf("%d   %d\n", node_files[0], node_files[1]);
           MPI_Recv(&actual_size, 1, MPI_INT, node_files[0], INTER_SLAVE_TAG, MPI_COMM_WORLD, &status);
+          // printf("%d\n", actual_size);
 
-          if (actual_size == END_PHASE)
+          if (actual_size == END_PHASE || actual_size == 0)
             continue;
 
           vector<pair<string, int> > f(actual_size);
           char fname[MAX_PATH_SIZE];
           int sz;
-
+          if (QUEUE_DEBUG)
+            printf("Status: %d\n", actual_size);
           // TODO: Make more efficient by wrapping into a structure
           for (int i = 0; i < actual_size; i++) {
             MPI_Recv(fname, MAX_PATH_SIZE, MPI_CHAR, node_files[0], INTER_SLAVE_TAG, MPI_COMM_WORLD, &status);
             MPI_Recv(&sz, 1, MPI_INT, node_files[0], INTER_SLAVE_TAG, MPI_COMM_WORLD, &status);
             f[i] = make_pair(string(fname), sz);
+
+            if (QUEUE_DEBUG)
+              printf("From: %d In: %d %s\n", node_files[0], rank, fname);
+            
+            memset(fname, '\0', MAX_PATH_SIZE);
           }
 
           #pragma omp critical(queuepop)
           {
             for (int i = 0; i < actual_size; i++) {
               file_queue.push(f[i]);
+              total_size += f[i].second;
             }
           }
-          sleep(1);
+          sleep(SLEEP_TIME);
         }
       }
 
@@ -126,6 +152,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
           break;
         else {
           int stat = END_PHASE;
+          debug_mpi_dest(3, status.MPI_SOURCE);
           MPI_Send(&stat, 1, MPI_INT, status.MPI_SOURCE, INTER_SLAVE_TAG, MPI_COMM_WORLD);
         }
       }
@@ -157,14 +184,25 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
         if (q_not_empty) {
           set<string> rel = get_relevant_words(file);
 
-          #pragma omp critical(mapupdate)
-          m[file] = rel;
-          printf("%s\n", file.c_str());
+          if (QUEUE_DEBUG)
+            printf("Processing...\n");
+
+          // rel is empty if the file couldn't be opened
+          // TODO: handle this better than this hacky empty set
+          if (!rel.empty()) {
+            #pragma omp critical(mapupdate)
+            m[file] = rel;
+            if (INITIAL_DEBUG) {
+              printf("Extracting: %s\n", file.c_str());
+            }
+          }
         }
       }
     }
   }
-  printf("Done file size: %d\n", total_size);
+  if (INITIAL_DEBUG) {
+    printf("Done file size: %d\n", total_size);
+  }
   return m;
 }
 
@@ -213,11 +251,13 @@ void master_handle_communication() {
         node_files[0] = STAY_PUT;
       }
       else {
-        node_files[0] = take;
-        node_files[1] = file_size_left[size - 2].second;
+        node_files[0] = file_size_left[size - 2].second;
+        node_files[1] = take;
       }
     }
 
+
+    debug_mpi_dest(4, status.MPI_SOURCE);
     MPI_Send(node_files, 2, MPI_INT, status.MPI_SOURCE, MASTER_TAG, MPI_COMM_WORLD);
 
   }
@@ -227,6 +267,8 @@ void master_handle_communication() {
   // TODO: Improve efficiency with bcast
   for (int i = 1; i < size; ++i)
   {
+
+    debug_mpi_dest(5, i);
     MPI_Send(&next, 1, MPI_INT, i, MASTER_TAG, MPI_COMM_WORLD);
   }
 
@@ -246,6 +288,7 @@ queue<pair<string, int> > load_file_list(string filelist, int &total_size) {
   queue<pair<string, int> > file_queue;
   while (fscanf(fp1, "%s %d", oneword, &file_size) != EOF) {
     file_queue.push(make_pair(string(oneword), file_size));
+    // printf("Rank:%d %s\n", rank, oneword);
     total_size += file_size;
   }
 
@@ -269,7 +312,7 @@ void test_phase2_mp() {
     map<string, set<string> > m = get_relevant_words_from_files();
     for (map<string, set<string> >::iterator i = m.begin(); i != m.end(); ++i)
     {
-      printf("%d\n", (int)(i->second).size());
+      printf("Rank: %d;  %s  %d\n", rank, (i->first).c_str(), (int)(i->second).size());
     }
   }
 

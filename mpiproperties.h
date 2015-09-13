@@ -12,7 +12,7 @@
 
 #define TIME_OUT -3
 
-#define STAY_PUT_SLEEP_TIME 2
+#define STAY_PUT_SLEEP_TIME 1
 
 extern int rank;
 

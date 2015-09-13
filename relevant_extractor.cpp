@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <set>
 #include <string>
+#include <stdarg.h>
 #include <map>
 #include <fstream>
 #include <iostream>
@@ -56,12 +57,17 @@ set<string> get_relevant_words(string f) {
   char oneword[100];
 
   fp1 = fopen(f.c_str(),"r");
+  
+  set<string> rel;
 
+  if (fp1 == NULL)
+    return rel;
+
+  // printf("%s\n", f.c_str());
   while (fscanf(fp1,"%s",oneword) != EOF) {
     m[string(oneword)]++;
   }
 
-  set<string> rel;
 
 
   if (m.size() == 0)

@@ -8,6 +8,12 @@
 #include <utility>
 #include <map>
 
+#define DEBUG_MPI_DEST 0
+#define INITIAL_DEBUG 0
+#define QUEUE_DEBUG 0
+
+#define SLEEP_TIME 1
+
 #define UPDATE_FREQ 1
 #define MAX_PATH_SIZE 255
 
