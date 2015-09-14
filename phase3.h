@@ -11,8 +11,9 @@
 
 extern map<string, int> file_to_node_mapping;
 extern vector<string> node_to_file_mapping;
-extern vector<int> adj_matrix_chunk;
+extern vector<vector<int> > adj_matrix_chunk;
 extern vector<vector<pair<string, set<string> > > > external_list;
+extern vector<pair<string, set<string> > > current_list;
 
 extern int node_first_file;
 extern int node_last_file;

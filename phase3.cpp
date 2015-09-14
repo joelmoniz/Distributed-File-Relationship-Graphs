@@ -9,14 +9,17 @@
 #include <queue>
 #include <map>
 #include <string>
+#include <omp.h>
+#include <algorithm>
 
 using namespace std;
 
 map<string, int> file_to_node_mapping;
 vector<string> node_to_file_mapping;
 
-vector<int> adj_matrix_chunk;
+vector<vector<int> > adj_matrix_chunk;
 vector<vector<pair<string, set<string> > > > external_list(2, vector<pair<string, set<string> > >());
+vector<pair<string, set<string> > > current_list;
 
 int node_first_file;
 int node_last_file;
@@ -50,12 +53,17 @@ void get_file_integer_map() {
     }
 
     if (i == rank) {
-      node_last_file = num;
+      node_last_file = num - 1;
       node_file_count = node_last_file - node_first_file + 1;
+      adj_matrix_chunk.resize(node_file_count);
     }
 
   }
   node_to_file_mapping.resize(num);
+
+  for (int i = 0; i < node_file_count; i++) {
+    adj_matrix_chunk[i].resize(num);
+  }
 
   for (map<string, int>::iterator i = file_to_node_mapping.begin(); i != file_to_node_mapping.end(); ++i)
   {
@@ -137,7 +145,40 @@ void transfer_graph(int iter) {
       receive_graph(iter);
     }
   }
-  MPI_Barrier(MPI_COMM_WORLD);
+}
+
+// NOTE: Call Barrier in the for loop enclosing this function
+void transfer_graph_and_get_intersection(int iter) {
+  if (rank == 0)
+    return;
+  #pragma omp parallel shared(iter)
+  {
+    int is_master_thread = 0;
+
+    MPI_Is_thread_main(&is_master_thread);
+
+    // TODO: Instead of taking x files, take based on size
+    if (is_master_thread) {
+      transfer_graph(iter);
+    }
+    else {
+      printf("List size: %d  \n", current_list.size());
+      for (int i = 0; i < current_list.size(); i++) {
+        printf("Ext. list: %d\n", external_list[(iter + 1) % 2].size());
+        for (int j = 0; j < external_list[(iter + 1) % 2].size(); j++) {
+          vector<string> common(2);
+          set_intersection(external_list[(iter + 1) % 2][j].second.begin(),
+                           current_list[i].second.begin(), external_list[(iter + 1) % 2][j].second.end(),
+                           current_list[i].second.end(), common.begin());
+          int sz = common.size();
+          int local = file_to_node_mapping[current_list[i].first] - node_first_file;
+          int global = file_to_node_mapping[external_list[(iter + 1) % 2][j].first];
+          adj_matrix_chunk[local][global] = sz;
+        }
+      }
+    }
+  }
+  // MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void test_send_and_receive() {
@@ -149,6 +190,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("maurya", set<string>(init, init + 2)));
     string init2[] = { "Is", "Mine", "too"};
     external_list[1].push_back(make_pair("saurabh", set<string>(init2, init2 + 3)));
+    // current_list = external_list[1];
     break;
   }
   case 2:
@@ -156,6 +198,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("moniz", set<string>(init, init + 2)));
     string init2[] = { "out", "people", "shout"};
     external_list[1].push_back(make_pair("krishnan", set<string>(init2, init2 + 3)));
+    // current_list = external_list[1];
     break;
   }
   case 3:
@@ -163,6 +206,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("joel", set<string>(init, init + 2)));
     string init2[] = { "Jingle", "Heimer"};
     external_list[1].push_back(make_pair("gokul", set<string>(init2, init2 + 2)));
+    // current_list = external_list[1];
     break;
   }
   }
@@ -172,8 +216,9 @@ void test_send_and_receive() {
     printf("------------------------\n");
     printf("Iter %d\n", i);
     printf("------------------------\n");
-    transfer_graph(i);
+    transfer_graph_and_get_intersection(i);
     for (int r = 1; r < size; r++) {
+      // i++;
       if (r == rank) {
         printf("Rank: %d\n", rank);
         for (int j = 0; j < external_list[i % 2].size(); j++) {
@@ -185,7 +230,24 @@ void test_send_and_receive() {
           }
         }
       }
+      // i--;
       MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    if (i == size - 1) {
+      for (int r = 1; r < size; r++) {
+        // i++;
+        if (r == rank) {
+          for (int x = 0; x < node_file_count; x++) {
+            for (int y = 0; y < adj_matrix_chunk[x].size(); y++) {
+              printf("%d ", adj_matrix_chunk[x][y]);
+            }
+            printf("\n");
+          }
+        }
+        // i--;
+        MPI_Barrier(MPI_COMM_WORLD);
+      }
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
