@@ -24,11 +24,13 @@ int node_file_count;
 
 void get_file_integer_map() {
 
-  stringstream sstm;
   int total_size;
   int num = 0;
+  if (rank == 0)
+    return;
   for (int i = 1; i < size; ++i)
   {
+    stringstream sstm;
     sstm << "./data/node" << i << "_files.txt";
     string filelist =  sstm.str();
 
@@ -60,7 +62,7 @@ void get_file_integer_map() {
     node_to_file_mapping[i->second] = i->first;
 
     if (DEBUG_MAPPING)
-      printf("%s: %d\n", (i->first).c_str(), (i->second));
+      printf("Rank: %d; %s: %d\n", rank, (i->first).c_str(), (i->second));
   }
 }
 
@@ -124,21 +126,22 @@ void receive_graph(int iter) {
 }
 
 void transfer_graph(int iter) {
-  if (rank != 0 && iter != 0) {
+  if (rank != 0 && iter < size - 1) {
     // 0 "indexed", but we don't want info exchange in 0th iter.
     if (rank % 2 == 0) {
-      receive_graph(iter-1);
-      send_graph(iter-1);
+      receive_graph(iter);
+      send_graph(iter);
     }
     else {
-      send_graph(iter-1);
-      receive_graph(iter-1);
+      send_graph(iter);
+      receive_graph(iter);
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void test_send_and_receive() {
+  get_file_integer_map();
   switch (rank) {
   case 1:
   {
