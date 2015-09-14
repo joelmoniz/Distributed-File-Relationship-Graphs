@@ -151,25 +151,29 @@ void transfer_graph(int iter) {
 void transfer_graph_and_get_intersection(int iter) {
   if (rank == 0)
     return;
-  #pragma omp parallel shared(iter)
+  #pragma omp parallel num_threads(2) shared(iter)
   {
+    printf("Threads running: %d\n", omp_get_num_threads());
     int is_master_thread = 0;
 
     MPI_Is_thread_main(&is_master_thread);
 
-    // TODO: Instead of taking x files, take based on size
     if (is_master_thread) {
+      printf("Thread number: %d\n", omp_get_thread_num());
       transfer_graph(iter);
     }
     else {
       printf("List size: %d  \n", current_list.size());
+      // TODO: Parallelize this better (if possible)
+      // #pragma omp for
       for (int i = 0; i < current_list.size(); i++) {
-        printf("Ext. list: %d\n", external_list[(iter + 1) % 2].size());
+        printf("Ext. size: %d\n", external_list[(iter + 1) % 2].size());
         for (int j = 0; j < external_list[(iter + 1) % 2].size(); j++) {
-          vector<string> common(2);
+          printf("rank: %d iter: %d i: %d j: %d thread: %d\n", rank, iter, i, j, omp_get_thread_num());
+          set<string> common;
           set_intersection(external_list[(iter + 1) % 2][j].second.begin(),
-                           current_list[i].second.begin(), external_list[(iter + 1) % 2][j].second.end(),
-                           current_list[i].second.end(), common.begin());
+                           external_list[(iter + 1) % 2][j].second.end(), current_list[i].second.begin(), 
+                           current_list[i].second.end(), inserter(common,common.begin()));
           int sz = common.size();
           int local = file_to_node_mapping[current_list[i].first] - node_first_file;
           int global = file_to_node_mapping[external_list[(iter + 1) % 2][j].first];
@@ -190,7 +194,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("maurya", set<string>(init, init + 2)));
     string init2[] = { "Is", "Mine", "too"};
     external_list[1].push_back(make_pair("saurabh", set<string>(init2, init2 + 3)));
-    // current_list = external_list[1];
+    current_list = vector<pair<string, set<string> > > (external_list[1]);
     break;
   }
   case 2:
@@ -198,7 +202,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("moniz", set<string>(init, init + 2)));
     string init2[] = { "out", "people", "shout"};
     external_list[1].push_back(make_pair("krishnan", set<string>(init2, init2 + 3)));
-    // current_list = external_list[1];
+    current_list = vector<pair<string, set<string> > > (external_list[1]);
     break;
   }
   case 3:
@@ -206,7 +210,7 @@ void test_send_and_receive() {
     external_list[1].push_back(make_pair("joel", set<string>(init, init + 2)));
     string init2[] = { "Jingle", "Heimer"};
     external_list[1].push_back(make_pair("gokul", set<string>(init2, init2 + 2)));
-    // current_list = external_list[1];
+    current_list = vector<pair<string, set<string> > > (external_list[1]);
     break;
   }
   }
