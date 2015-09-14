@@ -100,7 +100,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
 
             for (int i = 0; i < actual; ++i)
             {
-              MPI_Send(fl[i].first.c_str(), fl[i].first.length()+1, MPI_CHAR, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
+              MPI_Send(fl[i].first.c_str(), fl[i].first.length() + 1, MPI_CHAR, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
               MPI_Send(&fl[i].second, 1, MPI_INT, src, INTER_SLAVE_TAG, MPI_COMM_WORLD);
             }
 
@@ -255,7 +255,7 @@ void master_handle_communication() {
     }
     else {
       // TODO: Better heuristic?
-      int take = (file_size_left[size - 2].first - left) / (2*(size - 1));
+      int take = (file_size_left[size - 2].first - left) / (2 * (size - 1));
       if (take < 1) {
         node_files[0] = STAY_PUT;
       }

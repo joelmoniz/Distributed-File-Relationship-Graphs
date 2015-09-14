@@ -3,7 +3,6 @@
 
 #include <string>
 #include <set>
-#include <map>
 #include <queue>
 #include <utility>
 #include <map>
@@ -16,6 +15,8 @@
 
 #define UPDATE_FREQ 1
 #define MAX_PATH_SIZE 255
+
+using namespace std;
 
 map<string, set<string> > get_relevant_words_from_files();
 void test_phase2_mpi();
