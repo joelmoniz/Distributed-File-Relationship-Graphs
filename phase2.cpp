@@ -25,8 +25,10 @@ map<string, set<string> > get_relevant_words_from_files() {
   setup_stopwords();
 
   stringstream sstm;
-  sstm << "./data/node" << rank << "_files.txt";
-  string filelist =  sstm.str();
+  sstm << "/data/node" << rank << "_files.txt";
+  string filelist = originaldir + sstm.str();
+
+  printf("Output Here: %s   %s\n", originaldir.c_str(), filelist.c_str());
 
   int total_size = 0;
 
@@ -50,8 +52,8 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
   map<string, set<string> > m;
 
   stringstream sstm;
-  sstm << "./data/node" << rank << "_processed_files.txt";
-  string filelist =  sstm.str();
+  sstm << "/data/node" << rank << "_processed_files.txt";
+  string filelist =  originaldir + sstm.str();
 
   FILE *fp1;
   fp1 = fopen(filelist.c_str(), "w");
@@ -228,7 +230,8 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
   if (INITIAL_DEBUG) {
     printf("Done file size: %d\n", total_size);
   }
-  fclose(fp1);
+  if (fp1 != NULL)
+    fclose(fp1);
   return m;
 }
 

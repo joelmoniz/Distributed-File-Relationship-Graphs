@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
 
 
 
-  // run_phase2_mpi();
-  // test_phase3();
+  run_phase2_mpi();
+  test_phase3();
 
 
 

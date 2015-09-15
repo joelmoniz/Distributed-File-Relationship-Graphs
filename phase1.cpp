@@ -115,8 +115,8 @@ queue<string> get_n_folders(int argc, char *argv[], int n)
     realpath(argv[1], topdir);
   }
 
-  originaldir = string(topdir);
-  printf("Original: %s\n", originaldir.c_str());
+  // originaldir = string(topdir);
+  // printf("Original: %s\n", originaldir.c_str());
 
   queue<string> tfl, subdir;
   subdir.push(string(topdir));
@@ -456,7 +456,7 @@ void run_phase1_mpi(int argc, char *argv[]) {
   char topdir[500] = "";
   // char curdir[500] = "";
   if (argc != 2)
-    strcpy(topdir, pwd);
+    realpath(pwd, topdir);
   else if (argv[1][0] != '/')
   {
     realpath(argv[1], topdir);
@@ -496,8 +496,11 @@ void run_phase1_mpi(int argc, char *argv[]) {
         fprintf(fp1, "%s\n", v[i].c_str());
       }
 
-      fclose(fp1);
+      // TODO: Handle better
+      if (fp1 != NULL)
+        fclose(fp1);
     }
     MPI_Barrier(MPI_COMM_WORLD);
   }
+  // printf("Args: %d\n", argc);
 }

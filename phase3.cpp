@@ -34,8 +34,8 @@ void get_file_integer_map() {
   for (int i = 1; i < size; ++i)
   {
     stringstream sstm;
-    sstm << "./data/node" << i << "_processed_files.txt";
-    string filelist =  sstm.str();
+    sstm << "/data/node" << i << "_processed_files.txt";
+    string filelist =  originaldir + sstm.str();
 
     queue<pair<string, int> > file_queue = load_file_list(filelist, total_size);
 
