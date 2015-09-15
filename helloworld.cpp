@@ -1,7 +1,7 @@
 #include "mpi.h"
 #include "relevant_extractor.h"
 #include <omp.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include "phase2.h"
 #include "mpiproperties.h"
 #include "phase3.h"
@@ -32,11 +32,31 @@ int main(int argc, char *argv[]) {
   run_phase2_mpi();
   run_phase3();
 
-  related_docs("/data/node1/medium.txt", 1);
-  common_to_both_docs("/data/node1/medium.txt", "/data/node1/medium3.txt", 2);
+  printf("TELLLLLLLLLLLLLL\n");
 
-  // test_phase2_without_mpi();
-  // test_mpi();
+  int qn;
+  int i = 1;
+  char q1[255], q2[255];
+
+  string filelist = originaldir + "/data/query.txt";
+  FILE *fp1;
+  fp1 = fopen(filelist.c_str(), "r");
+
+  while (fscanf(fp1, "%d", &qn) != EOF) {
+    if (qn == 1) {
+      fscanf(fp1, "%s", q1);
+      printf("%s\n", q1);
+      related_docs("/data/node1/medium.txt", i);
+    }
+    else if (qn == 2) {
+      fscanf(fp1, "%s", q1);
+      printf("%s\n", q1);
+      fscanf(fp1, "%s", q2);
+      printf("%s\n", q2);
+      common_to_both_docs(string(q1), string(q2), i);
+    }
+    i++;
+  }
 
   MPI_Finalize();
 }
@@ -52,7 +72,7 @@ int main(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
   omp_set_num_threads(omp_get_num_procs());
 
-  #pragma omp parallel 
+  #pragma omp parallel
   {
     // #pragma omp master
     // while(1);
@@ -62,21 +82,21 @@ int main(int argc, char *argv[]) {
     // test_relevant();
     // test_relevant();
     // test_relevant();
-    
-    
+
+
   }
   // test_relevant();
 }
 */
 
 void test_mpi() {
-  if (rank==0) {
+  if (rank == 0) {
     char buf[32];
     MPI_Status status;
     // receive message from any source
     MPI_Recv(buf, 32, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
     printf("In process %d: Message:\n\"%s\"\n", rank, buf);
-    char replybuf[32]= "message received";
+    char replybuf[32] = "message received";
     // send reply back to sender of the message received above
     MPI_Send(replybuf, 32, MPI_CHAR, status.MPI_SOURCE, 0, MPI_COMM_WORLD);
   }
