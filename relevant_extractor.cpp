@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "relevant_extractor.h"
 #include <stdexcept>
+#include <cctype>
 
 #define PRINT_WORDS 0
 
@@ -33,6 +34,13 @@ void test_relevant() {
   cout<<ans.size()<<"\n";
 }
 
+bool is_non_alpha(char c) {
+  if (isalpha(c))
+    return false;
+  else
+    return true;
+}
+
 void setup_stopwords() {
   string stop[] = {"a", "an", "the", "of", "on", "in"};
   stopwords = set<string>(stop, stop+sizeof(stop)/sizeof(string *));
@@ -45,9 +53,6 @@ set<string> get_relevant_words(string f) {
   file.open (f.c_str());
   string word;
   while (file >> word) {
-    if (stopwords.find(word) != stopwords.end()) {
-      continue;
-    }
     if (m.find(word) == m.end()) {
       m[word] = 0;
     }
@@ -66,7 +71,13 @@ set<string> get_relevant_words(string f) {
 
   // printf("%s\n", f.c_str());
   while (fscanf(fp1,"%s",oneword) != EOF) {
-    m[string(oneword)]++;
+    string word(oneword);
+    if (stopwords.find(word) != stopwords.end()) {
+      continue;
+    }
+    // http://stackoverflow.com/a/6319898
+    word.erase(remove_if(word.begin(), word.end(), is_non_alpha), word.end());
+    m[word]++;
   }
 
 

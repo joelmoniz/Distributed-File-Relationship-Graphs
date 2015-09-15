@@ -97,7 +97,6 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
               for (int i = 0; i < actual; ++i)
               {
                 fl[i] = file_queue.front();
-                fprintf(fp1, "%s\n", fl[i].first.c_str());
                 file_queue.pop();
                 total_size -= fl[i].second;
               }
@@ -203,8 +202,15 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
 
           try {
             rel = get_relevant_words(file);
+
             #pragma omp critical(mapupdate)
             m[file] = rel;
+
+            #pragma omp critical(fileupdate)
+            {
+              fprintf(fp1, "%s\n", file.c_str());
+              printf("Updating: %s\n", file.c_str());
+            }
             if (INITIAL_DEBUG) {
               printf("Extracting: %s\n", file.c_str());
             }
@@ -221,6 +227,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
   if (INITIAL_DEBUG) {
     printf("Done file size: %d\n", total_size);
   }
+  fclose(fp1);
   return m;
 }
 

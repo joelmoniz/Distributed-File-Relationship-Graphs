@@ -34,7 +34,7 @@ void get_file_integer_map() {
   for (int i = 1; i < size; ++i)
   {
     stringstream sstm;
-    sstm << "./data/node" << i << "_files.txt";
+    sstm << "./data/node" << i << "_processed_files.txt";
     string filelist =  sstm.str();
 
     queue<pair<string, int> > file_queue = load_file_list(filelist, total_size);
@@ -273,11 +273,11 @@ void test_phase3() {
       if (r == rank) {
         printf("Rank: %d\n", rank);
         for (int j = 0; j < external_list[i % 2].size(); j++) {
-          printf("first: %s\n", external_list[i % 2][j].first.c_str());
+          printf("\nfirst: %s\n", external_list[i % 2][j].first.c_str());
 
           for (set<string>::iterator k = external_list[i % 2][j].second.begin(); k != external_list[i % 2][j].second.end(); ++k)
           {
-            printf("%s\n", (*k).c_str());
+            printf("%s ", (*k).c_str());
           }
         }
       }
@@ -289,6 +289,8 @@ void test_phase3() {
       for (int r = 1; r < size; r++) {
         // i++;
         if (r == rank) {
+          if (rank == 1)
+            printf("\n");
           for (int x = 0; x < node_file_count; x++) {
             for (int y = 0; y < adj_matrix_chunk[x].size(); y++) {
               printf("%d ", adj_matrix_chunk[x][y]);
