@@ -21,6 +21,8 @@
 
 using namespace std;
 
+string originaldir;
+
 //http://stackoverflow.com/a/874160
 bool ends_with(string const &fullString, string const &ending) {
   if (fullString.length() >= ending.length()) {
@@ -39,7 +41,8 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
   // if (dir.find(".git") == string::npos)
 
   if ((dp = opendir(dir.c_str())) == NULL) {
-    fprintf(stderr, "cannot open directory: %s\n", dir.c_str());
+    // TODO: Figure out how to remove error
+    // fprintf(stderr, "cannot open directory: %s\n", dir.c_str());
     return;
   }
   if (chdir(dir.c_str()) != 0)
@@ -111,7 +114,9 @@ queue<string> get_n_folders(int argc, char *argv[], int n)
   {
     realpath(argv[1], topdir);
   }
-  // printf("%s\n", topdir);
+
+  originaldir = string(topdir);
+  printf("Original: %s\n", originaldir.c_str());
 
   queue<string> tfl, subdir;
   subdir.push(string(topdir));
@@ -414,6 +419,19 @@ void test_phase1_mpi(int argc, char *argv[]) {
   //   printf("Hello World from process %d\n", rank);
 
 
+  // TODO: Handle this neater
+  char pwd[2] = ".";
+  char topdir[500] = "";
+  // char curdir[500] = "";
+  if (argc != 2)
+    strcpy(topdir, pwd);
+  else if (argv[1][0] != '/')
+  {
+    realpath(argv[1], topdir);
+  }
+
+  originaldir = string(topdir);
+
   if (rank == 0) {
     master_handle_distribution(argc, argv);
   }
@@ -425,6 +443,61 @@ void test_phase1_mpi(int argc, char *argv[]) {
       printf("Rank: %d;  %s\n", rank, v[i].c_str());
     }
   }
+}
 
 
+
+void run_phase1_mpi(int argc, char *argv[]) {
+
+  vector<string> v;
+
+    // TODO: Handle this neater
+  char pwd[2] = ".";
+  char topdir[500] = "";
+  // char curdir[500] = "";
+  if (argc != 2)
+    strcpy(topdir, pwd);
+  else if (argv[1][0] != '/')
+  {
+    realpath(argv[1], topdir);
+  }
+
+  originaldir = string(topdir);
+
+  if (rank == 0) {
+    master_handle_distribution(argc, argv);
+  }
+  else {
+    v = slave_file_discovery();
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  for (int r = 1; r < size; r++) {
+    if (r == rank) {
+
+      stringstream sstm;
+      sstm << "/data/node" << rank << "_files.txt";
+
+      char x[200];
+      getcwd(x, 200);
+      printf("%s\n", x);
+      string filelist =  originaldir + sstm.str();//sstm.str();
+      printf("%s\n", filelist.c_str());
+      FILE *fp1;
+      fp1 = fopen(filelist.c_str(), "w");
+
+      if (fp1 == NULL)
+        printf("Ouch\n");
+
+      printf("Here: rank %d\n", rank);
+      for (int i = 0; i < v.size(); ++i)
+      {
+        fprintf(fp1, "%s\n", v[i].c_str());
+      }
+
+      fclose(fp1);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
 }

@@ -4,4 +4,5 @@
 
 void test_phase1_mpi(int argc, char *argv[]);
 void test_serial_traversal(int argc, char *argv[]);
+void run_phase1_mpi(int argc, char *argv[]);
 #endif
