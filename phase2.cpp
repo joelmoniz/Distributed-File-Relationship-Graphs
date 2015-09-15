@@ -28,7 +28,7 @@ map<string, set<string> > get_relevant_words_from_files() {
   sstm << "/data/node" << rank << "_files.txt";
   string filelist = originaldir + sstm.str();
 
-  printf("Output Here: %s   %s\n", originaldir.c_str(), filelist.c_str());
+  // printf("Output Here: %s   %s\n", originaldir.c_str(), filelist.c_str());
 
   int total_size = 0;
 
@@ -212,7 +212,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
             #pragma omp critical(fileupdate)
             {
               fprintf(fp1, "%s\n", file.c_str());
-              printf("Updating: %s\n", file.c_str());
+              // printf("Updating: %s\n", file.c_str());
             }
             if (INITIAL_DEBUG) {
               printf("Extracting: %s\n", file.c_str());
@@ -344,7 +344,7 @@ void run_phase2_mpi() {
     for (map<string, set<string> >::iterator i = m.begin(); i != m.end(); ++i)
     {
       current_list.push_back(make_pair(i->first, i->second));
-      printf("Rank: %d;  %s  %d\n", rank, (i->first).c_str(), (int)(i->second).size());
+      // printf("Rank: %d;  %s  %d\n", rank, (i->first).c_str(), (int)(i->second).size());
     }
   }
   MPI_Barrier(MPI_COMM_WORLD);

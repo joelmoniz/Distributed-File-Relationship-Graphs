@@ -23,6 +23,7 @@ using namespace std;
 
 void test_send_and_receive();
 void test_phase3();
+void run_phase3();
 
 #define DEBUG_MAPPING 1
 

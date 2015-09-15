@@ -55,7 +55,7 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
         continue;
 
       string newdir = dir + "/" + string(entry->d_name);
-      printf("Rank %d: %s\n", rank, newdir.c_str());
+      // printf("Rank %d: %s\n", rank, newdir.c_str());
 
       // if (string(entry->d_name) != "." && string(entry->d_name) != "..")
       dir_list.push(newdir);
@@ -97,7 +97,7 @@ void test_serial_traversal(int argc, char *argv[])
     subdir.pop();
   }
   while (!tfl.empty()) {
-    printf("%s\n", tfl.front().c_str());
+    // printf("%s\n", tfl.front().c_str());
     tfl.pop();
   }
 }
@@ -316,7 +316,7 @@ vector<string> slave_file_discovery() {
           {
             while (!textfile_list.empty()) {
               v.push_back(textfile_list.front());
-              printf("Here %s\n", textfile_list.front().c_str());
+              // printf("Here %s\n", textfile_list.front().c_str());
               textfile_list.pop();
             }
           }
@@ -481,16 +481,16 @@ void run_phase1_mpi(int argc, char *argv[]) {
 
       char x[200];
       getcwd(x, 200);
-      printf("%s\n", x);
+      // printf("%s\n", x);
       string filelist =  originaldir + sstm.str();//sstm.str();
-      printf("%s\n", filelist.c_str());
+      // printf("%s\n", filelist.c_str());
       FILE *fp1;
       fp1 = fopen(filelist.c_str(), "w");
 
-      if (fp1 == NULL)
-        printf("Ouch\n");
+      // if (fp1 == NULL)
+      //   printf("Ouch\n");
 
-      printf("Here: rank %d\n", rank);
+      // printf("Here: rank %d\n", rank);
       for (int i = 0; i < v.size(); ++i)
       {
         fprintf(fp1, "%s\n", v[i].c_str());

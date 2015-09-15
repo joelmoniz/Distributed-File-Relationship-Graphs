@@ -153,23 +153,23 @@ void transfer_graph_and_get_intersection(int iter) {
     return;
   #pragma omp parallel num_threads(2) shared(iter)
   {
-    printf("Threads running: %d\n", omp_get_num_threads());
+    // printf("Threads running: %d\n", omp_get_num_threads());
     int is_master_thread = 0;
 
     MPI_Is_thread_main(&is_master_thread);
 
     if (is_master_thread) {
-      printf("Thread number: %d\n", omp_get_thread_num());
+      // printf("Thread number: %d\n", omp_get_thread_num());
       transfer_graph(iter);
     }
     else {
-      printf("List size: %d  \n", (int)current_list.size());
+      // printf("List size: %d  \n", (int)current_list.size());
       // TODO: Parallelize this better (if possible)
       // #pragma omp for
       for (int i = 0; i < current_list.size(); i++) {
-        printf("Ext. size: %d\n", (int)external_list[(iter + 1) % 2].size());
+        // printf("Ext. size: %d\n", (int)external_list[(iter + 1) % 2].size());
         for (int j = 0; j < external_list[(iter + 1) % 2].size(); j++) {
-          printf("rank: %d iter: %d i: %d j: %d thread: %d\n", rank, iter, i, j, omp_get_thread_num());
+          // printf("rank: %d iter: %d i: %d j: %d thread: %d\n", rank, iter, i, j, omp_get_thread_num());
           set<string> common;
           set_intersection(external_list[(iter + 1) % 2][j].second.begin(),
                            external_list[(iter + 1) % 2][j].second.end(), current_list[i].second.begin(),
@@ -284,6 +284,40 @@ void test_phase3() {
       // i--;
       MPI_Barrier(MPI_COMM_WORLD);
     }
+
+    if (i == size - 1) {
+      for (int r = 1; r < size; r++) {
+        // i++;
+        if (r == rank) {
+          FILE *fp1;
+          string filelist = originaldir + "/data/graph.txt";
+          fp1 = fopen(filelist.c_str(), "w");
+          // if (rank == 1)
+          //   printf("\n");
+          for (int x = 0; x < node_file_count; x++) {
+            for (int y = 0; y < adj_matrix_chunk[x].size(); y++) {
+              fprintf(fp1, "%d ", adj_matrix_chunk[x][y]);
+            }
+            fprintf(fp1, "\n");
+          }
+          if (fp1 != NULL)
+            fclose(fp1);
+        }
+        // i--;
+        MPI_Barrier(MPI_COMM_WORLD);
+      }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
+}
+
+void run_phase3() {
+  get_file_integer_map();
+  external_list[1] = current_list;
+
+  for (int i = 0; i < size; ++i)
+  {
+    transfer_graph_and_get_intersection(i);
 
     if (i == size - 1) {
       for (int r = 1; r < size; r++) {

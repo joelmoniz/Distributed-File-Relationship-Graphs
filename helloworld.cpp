@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
 
   run_phase2_mpi();
-  test_phase3();
+  run_phase3();
 
   related_docs("/data/node1/medium.txt", 1);
   common_to_both_docs("/data/node1/medium.txt", "/data/node1/medium3.txt", 2);
