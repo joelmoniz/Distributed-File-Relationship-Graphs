@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
+
 //input needs to be absolute path
 void printdir(char *dir)
 {
@@ -34,7 +35,7 @@ void printdir(char *dir)
             printf("%s/%s\n", dir, entry->d_name);
         }
     }
-    
+
     chdir("..");
     closedir(dp);
 }

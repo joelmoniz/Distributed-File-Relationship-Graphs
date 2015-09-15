@@ -5,6 +5,7 @@
 #include "phase2.h"
 #include "mpiproperties.h"
 #include "phase3.h"
+#include "phase1.h"
 
 using namespace std;
 
@@ -21,8 +22,17 @@ int main(int argc, char *argv[]) {
   // test_phase2_mpi();
 
   // test_send_and_receive();
-  run_phase2_mpi();
-  test_phase3();
+
+  test_phase1_mpi(argc, argv);
+
+
+
+
+  // run_phase2_mpi();
+  // test_phase3();
+
+
+
 
   // test_phase2_without_mpi();
   // test_mpi();

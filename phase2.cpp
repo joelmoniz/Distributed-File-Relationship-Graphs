@@ -93,6 +93,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
             int actual;
             #pragma omp critical(queuepop)
             {
+              // TODO: Add in a better heuristic here
               actual = min((int)file_queue.size(), num_requested_files);
               for (int i = 0; i < actual; ++i)
               {

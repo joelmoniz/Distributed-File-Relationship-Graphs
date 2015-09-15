@@ -23,7 +23,7 @@ void test_phase2_mpi();
 map<string, set<string> > master_relevant_find(queue<pair<string, int> > &file_queue, int total_size);
 map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_queue, int total_size);
 queue<pair<string, int> > load_file_list(string filelist, int &total_size);
-
+void debug_mpi_dest(int loc, int dest);
 
 void test_phase2_without_mpi();
 void run_phase2_mpi();
