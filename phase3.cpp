@@ -172,8 +172,8 @@ void transfer_graph_and_get_intersection(int iter) {
           printf("rank: %d iter: %d i: %d j: %d thread: %d\n", rank, iter, i, j, omp_get_thread_num());
           set<string> common;
           set_intersection(external_list[(iter + 1) % 2][j].second.begin(),
-                           external_list[(iter + 1) % 2][j].second.end(), current_list[i].second.begin(), 
-                           current_list[i].second.end(), inserter(common,common.begin()));
+                           external_list[(iter + 1) % 2][j].second.end(), current_list[i].second.begin(),
+                           current_list[i].second.end(), inserter(common, common.begin()));
           int sz = common.size();
           int local = file_to_number_mapping[current_list[i].first] - node_first_file;
           int global = file_to_number_mapping[external_list[(iter + 1) % 2][j].first];
@@ -289,14 +289,19 @@ void test_phase3() {
       for (int r = 1; r < size; r++) {
         // i++;
         if (r == rank) {
-          if (rank == 1)
-            printf("\n");
+          FILE *fp1;
+          string filelist = originaldir + "/data/graph.txt";
+          fp1 = fopen(filelist.c_str(), "w");
+          // if (rank == 1)
+          //   printf("\n");
           for (int x = 0; x < node_file_count; x++) {
             for (int y = 0; y < adj_matrix_chunk[x].size(); y++) {
-              printf("%d ", adj_matrix_chunk[x][y]);
+              fprintf(fp1, "%d ", adj_matrix_chunk[x][y]);
             }
-            printf("\n");
+            fprintf(fp1, "\n");
           }
+          if (fp1 != NULL)
+            fclose(fp1);
         }
         // i--;
         MPI_Barrier(MPI_COMM_WORLD);

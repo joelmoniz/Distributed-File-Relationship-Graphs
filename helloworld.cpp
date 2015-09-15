@@ -6,6 +6,7 @@
 #include "mpiproperties.h"
 #include "phase3.h"
 #include "phase1.h"
+#include "query.h"
 
 using namespace std;
 
@@ -31,8 +32,8 @@ int main(int argc, char *argv[]) {
   run_phase2_mpi();
   test_phase3();
 
-
-
+  related_docs("/data/node1/medium.txt", 1);
+  common_to_both_docs("/data/node1/medium.txt", "/data/node1/medium3.txt", 2);
 
   // test_phase2_without_mpi();
   // test_mpi();
