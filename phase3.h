@@ -9,8 +9,8 @@
 #include <queue>
 #include <map>
 
-extern map<string, int> file_to_node_mapping;
-extern vector<string> node_to_file_mapping;
+extern map<string, int> file_to_number_mapping;
+extern vector<string> number_to_file_mapping;
 extern vector<vector<int> > adj_matrix_chunk;
 extern vector<vector<pair<string, set<string> > > > external_list;
 extern vector<pair<string, set<string> > > current_list;
@@ -22,6 +22,7 @@ extern int node_file_count;
 using namespace std;
 
 void test_send_and_receive();
+void test_phase3();
 
 #define DEBUG_MAPPING 1
 

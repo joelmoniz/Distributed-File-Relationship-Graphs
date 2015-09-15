@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <unistd.h>
 #include "phase2.h"
+#include "phase3.h"
 #include "mpiproperties.h"
 #include <stdexcept>
 
@@ -47,6 +48,13 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
   bool done = false;
   omp_set_num_threads(omp_get_num_procs() + 1);
   map<string, set<string> > m;
+
+  stringstream sstm;
+  sstm << "./data/node" << rank << "_processed_files.txt";
+  string filelist =  sstm.str();
+
+  FILE *fp1;
+  fp1 = fopen(filelist.c_str(), "w");
 
   #pragma omp parallel shared(file_queue, m, done)
   {
@@ -89,6 +97,7 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
               for (int i = 0; i < actual; ++i)
               {
                 fl[i] = file_queue.front();
+                fprintf(fp1, "%s\n", fl[i].first.c_str());
                 file_queue.pop();
                 total_size -= fl[i].second;
               }
@@ -312,6 +321,22 @@ queue<pair<string, int> > load_file_list(string filelist, int &total_size) {
 
 
   return file_queue;
+}
+
+void run_phase2_mpi() {
+
+  if (rank == 0) {
+    master_handle_communication();
+  }
+  else {
+    map<string, set<string> > m = get_relevant_words_from_files();
+    for (map<string, set<string> >::iterator i = m.begin(); i != m.end(); ++i)
+    {
+      current_list.push_back(make_pair(i->first, i->second));
+      printf("Rank: %d;  %s  %d\n", rank, (i->first).c_str(), (int)(i->second).size());
+    }
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void test_phase2_mpi() {

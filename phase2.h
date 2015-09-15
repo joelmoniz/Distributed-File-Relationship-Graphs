@@ -26,4 +26,5 @@ queue<pair<string, int> > load_file_list(string filelist, int &total_size);
 
 
 void test_phase2_without_mpi();
+void run_phase2_mpi();
 #endif

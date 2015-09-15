@@ -14,8 +14,8 @@
 
 using namespace std;
 
-map<string, int> file_to_node_mapping;
-vector<string> node_to_file_mapping;
+map<string, int> file_to_number_mapping;
+vector<string> number_to_file_mapping;
 
 vector<vector<int> > adj_matrix_chunk;
 vector<vector<pair<string, set<string> > > > external_list(2, vector<pair<string, set<string> > >());
@@ -48,7 +48,7 @@ void get_file_integer_map() {
     while (!file_queue.empty()) {
       p = file_queue.front();
       file_queue.pop();
-      file_to_node_mapping[p.first] = num;
+      file_to_number_mapping[p.first] = num;
       num++;
     }
 
@@ -59,15 +59,15 @@ void get_file_integer_map() {
     }
 
   }
-  node_to_file_mapping.resize(num);
+  number_to_file_mapping.resize(num);
 
   for (int i = 0; i < node_file_count; i++) {
     adj_matrix_chunk[i].resize(num);
   }
 
-  for (map<string, int>::iterator i = file_to_node_mapping.begin(); i != file_to_node_mapping.end(); ++i)
+  for (map<string, int>::iterator i = file_to_number_mapping.begin(); i != file_to_number_mapping.end(); ++i)
   {
-    node_to_file_mapping[i->second] = i->first;
+    number_to_file_mapping[i->second] = i->first;
 
     if (DEBUG_MAPPING)
       printf("Rank: %d; %s: %d\n", rank, (i->first).c_str(), (i->second));
@@ -163,11 +163,11 @@ void transfer_graph_and_get_intersection(int iter) {
       transfer_graph(iter);
     }
     else {
-      printf("List size: %d  \n", current_list.size());
+      printf("List size: %d  \n", (int)current_list.size());
       // TODO: Parallelize this better (if possible)
       // #pragma omp for
       for (int i = 0; i < current_list.size(); i++) {
-        printf("Ext. size: %d\n", external_list[(iter + 1) % 2].size());
+        printf("Ext. size: %d\n", (int)external_list[(iter + 1) % 2].size());
         for (int j = 0; j < external_list[(iter + 1) % 2].size(); j++) {
           printf("rank: %d iter: %d i: %d j: %d thread: %d\n", rank, iter, i, j, omp_get_thread_num());
           set<string> common;
@@ -175,8 +175,8 @@ void transfer_graph_and_get_intersection(int iter) {
                            external_list[(iter + 1) % 2][j].second.end(), current_list[i].second.begin(), 
                            current_list[i].second.end(), inserter(common,common.begin()));
           int sz = common.size();
-          int local = file_to_node_mapping[current_list[i].first] - node_first_file;
-          int global = file_to_node_mapping[external_list[(iter + 1) % 2][j].first];
+          int local = file_to_number_mapping[current_list[i].first] - node_first_file;
+          int global = file_to_number_mapping[external_list[(iter + 1) % 2][j].first];
           adj_matrix_chunk[local][global] = sz;
         }
       }
@@ -215,6 +215,53 @@ void test_send_and_receive() {
   }
   }
   MPI_Barrier(MPI_COMM_WORLD);
+  for (int i = 0; i < size; ++i)
+  {
+    printf("------------------------\n");
+    printf("Iter %d\n", i);
+    printf("------------------------\n");
+    transfer_graph_and_get_intersection(i);
+    for (int r = 1; r < size; r++) {
+      // i++;
+      if (r == rank) {
+        printf("Rank: %d\n", rank);
+        for (int j = 0; j < external_list[i % 2].size(); j++) {
+          printf("first: %s\n", external_list[i % 2][j].first.c_str());
+
+          for (set<string>::iterator k = external_list[i % 2][j].second.begin(); k != external_list[i % 2][j].second.end(); ++k)
+          {
+            printf("%s\n", (*k).c_str());
+          }
+        }
+      }
+      // i--;
+      MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    if (i == size - 1) {
+      for (int r = 1; r < size; r++) {
+        // i++;
+        if (r == rank) {
+          for (int x = 0; x < node_file_count; x++) {
+            for (int y = 0; y < adj_matrix_chunk[x].size(); y++) {
+              printf("%d ", adj_matrix_chunk[x][y]);
+            }
+            printf("\n");
+          }
+        }
+        // i--;
+        MPI_Barrier(MPI_COMM_WORLD);
+      }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+  }
+}
+
+
+void test_phase3() {
+  get_file_integer_map();
+  external_list[1] = current_list;
+
   for (int i = 0; i < size; ++i)
   {
     printf("------------------------\n");

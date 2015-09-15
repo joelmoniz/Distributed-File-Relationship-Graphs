@@ -19,7 +19,11 @@ int main(int argc, char *argv[]) {
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
   // test_phase2_mpi();
-  test_send_and_receive();
+
+  // test_send_and_receive();
+  run_phase2_mpi();
+  test_phase3();
+
   // test_phase2_without_mpi();
   // test_mpi();
 
