@@ -52,15 +52,18 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
         continue;
 
       string newdir = dir + "/" + string(entry->d_name);
-      printf("Rank %d: %s\n", rank, dir.c_str());
+      printf("Rank %d: %s\n", rank, newdir.c_str());
+
+      // if (string(entry->d_name) != "." && string(entry->d_name) != "..")
       dir_list.push(newdir);
     }
     else if (dir != "")
     {
       string fname = string(entry->d_name);
 
-      if (ends_with(fname, ".txt"))
+      if (ends_with(fname, ".txt")) {
         textfile_list.push(dir + "/" + fname);
+      }
       // else
       //   printf("%s\n", (dir + "/" + fname).c_str());
     }
@@ -117,7 +120,7 @@ queue<string> get_n_folders(int argc, char *argv[], int n)
     get_subdir(subdir.front(), tfl, subdir);
     subdir.pop();
   }
-  
+
   // TODO: Handle too few sub-folders better
   if (subdir.empty()) {
     subdir.push(string(topdir));
@@ -327,18 +330,18 @@ vector<string> slave_file_discovery() {
 void master_handle_distribution(int argc, char *argv[]) {
   vector<pair<int, int> > file_size_left(size - 1);
 
-  queue<string> paths = get_n_folders(argc, argv, size-1);
-  int num_nodes = paths.size();
+  queue<string> paths = get_n_folders(argc, argv, size - 1);
 
-  for (int i=1; i<size; i++) {
-    int nn = num_nodes/(size-1);
+  for (int i = 1; i < size; i++) {
+    int num_nodes = paths.size();
+    int nn = num_nodes / (size - i);
     MPI_Send(&nn, 1, MPI_INT, i, MASTER_TAG, MPI_COMM_WORLD);
     for (int j = 0; j < nn; ++j)
     {
       MPI_Send(paths.front().c_str(), paths.front().length() + 1, MPI_CHAR, i, MASTER_TAG, MPI_COMM_WORLD);
       paths.pop();
     }
-    file_size_left[i-1] = make_pair(nn, i);
+    file_size_left[i - 1] = make_pair(nn, i);
   }
 
   MPI_Barrier(MPI_COMM_WORLD);

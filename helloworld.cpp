@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   // test_send_and_receive();
 
   test_phase1_mpi(argc, argv);
-
+  // test_serial_traversal(argc, argv);
 
 
 
