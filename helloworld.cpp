@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   run_phase2_mpi();
   run_phase3();
 
-  printf("TELLLLLLLLLLLLLL\n");
+  // printf("TELLLLLLLLLLLLLL\n");
 
   int qn;
   int i = 1;
@@ -45,14 +45,14 @@ int main(int argc, char *argv[]) {
   while (fscanf(fp1, "%d", &qn) != EOF) {
     if (qn == 1) {
       fscanf(fp1, "%s", q1);
-      printf("%s\n", q1);
-      related_docs("/data/node1/medium.txt", i);
+      // printf("%s\n", q1);
+      related_docs(string(q1), i);
     }
     else if (qn == 2) {
       fscanf(fp1, "%s", q1);
-      printf("%s\n", q1);
+      // printf("%s\n", q1);
       fscanf(fp1, "%s", q2);
-      printf("%s\n", q2);
+      // printf("%s\n", q2);
       common_to_both_docs(string(q1), string(q2), i);
     }
     i++;

@@ -45,17 +45,20 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
     // fprintf(stderr, "cannot open directory: %s\n", dir.c_str());
     return;
   }
+
+  char c[255];
+
   if (chdir(dir.c_str()) != 0)
     printf("err chdir");
   while ((entry = readdir(dp)) != NULL) {
     lstat(entry->d_name, &statbuf);
     if (S_ISDIR(statbuf.st_mode)) {
 
-      if (strcmp(".", entry->d_name) == 0 || strcmp("..", entry->d_name) == 0)
+      if ((entry->d_name)[0] == '.' || strcmp("..", entry->d_name) == 0)
         continue;
 
       string newdir = dir + "/" + string(entry->d_name);
-      // printf("Rank %d: %s\n", rank, newdir.c_str());
+      printf("Rank %d: %s\n", rank, newdir.c_str());
 
       // if (string(entry->d_name) != "." && string(entry->d_name) != "..")
       dir_list.push(newdir);
@@ -64,7 +67,9 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
     {
       string fname = string(entry->d_name);
 
-      if (ends_with(fname, ".txt")) {
+      if (!ends_with(fname, ".txt")) {
+        // printf("%s\n", fname.c_str());
+        // realpath((dir + "/" + fname).c_str(), c);
         textfile_list.push(dir + "/" + fname);
       }
       // else
@@ -109,7 +114,7 @@ queue<string> get_n_folders(int argc, char *argv[], int n)
   char topdir[500] = "";
   // char curdir[500] = "";
   if (argc != 2)
-    strcpy(topdir, pwd);
+    realpath(pwd, topdir);
   else if (argv[1][0] != '/')
   {
     realpath(argv[1], topdir);
@@ -420,15 +425,18 @@ void test_phase1_mpi(int argc, char *argv[]) {
 
 
   // TODO: Handle this neater
-  char pwd[2] = ".";
+  char pwd[10] = "./data";
   char topdir[500] = "";
   // char curdir[500] = "";
   if (argc != 2)
-    strcpy(topdir, pwd);
-  else if (argv[1][0] != '/')
+    strcpy(pwd, topdir);
+  else //if (argv[1][0] != '/')
   {
-    realpath(argv[1], topdir);
+    strcpy(pwd, argv[1]);
   }
+
+  realpath(pwd, topdir);
+
 
   originaldir = string(topdir);
 
@@ -463,6 +471,7 @@ void run_phase1_mpi(int argc, char *argv[]) {
   }
 
   originaldir = string(topdir);
+  printf("REAL::: %s\n", topdir);
 
   if (rank == 0) {
     master_handle_distribution(argc, argv);

@@ -60,7 +60,7 @@ set<string> get_relevant_words(string f) {
   }
   */
   FILE *fp1;
-  char oneword[100];
+  char oneword[200];
 
   fp1 = fopen(f.c_str(),"r");
   

@@ -24,10 +24,10 @@ void related_docs(string doc, int qnum) {
 
   vector<string> v;
 
-  int node = file_to_number_mapping[originaldir + doc];
+  int node = file_to_number_mapping[doc];
 
   for (int i = 0; i < adj_matrix_chunk.size(); i++) {
-      if (adj_matrix_chunk[i][node] > 5) {
+      if (adj_matrix_chunk[i][node] > 10) {
         v.push_back(number_to_file_mapping[i + node_first_file]);
       }
   }
@@ -39,6 +39,10 @@ void related_docs(string doc, int qnum) {
   for (int r = 1; r < size; r++) {
     // i++;
     if (r == rank) {
+      if (r==1) {
+        printf("File number mapping is: %s -> %d\n", doc.c_str(), file_to_number_mapping[doc]);
+      }
+      printf("Printing query %d from rank %d\n", qnum, rank);
       FILE *fp1;
       fp1 = fopen(filelist.c_str(), "w");
       for (int x = 0; x < v.size(); x++) {
@@ -61,11 +65,11 @@ void common_to_both_docs(string doc1, string doc2, int qnum) {
 
   vector<string> v;
 
-  int node1 = file_to_number_mapping[originaldir + doc1];
-  int node2 = file_to_number_mapping[originaldir + doc2];
+  int node1 = file_to_number_mapping[doc1];
+  int node2 = file_to_number_mapping[doc2];
 
   for (int i = 0; i < adj_matrix_chunk.size(); i++) {
-      if (adj_matrix_chunk[i][node1] > 5 && adj_matrix_chunk[i][node2] > 5) {
+      if (adj_matrix_chunk[i][node1] > 10 && adj_matrix_chunk[i][node2] > 10) {
         v.push_back(number_to_file_mapping[i + node_first_file]);
       }
   }
@@ -77,6 +81,11 @@ void common_to_both_docs(string doc1, string doc2, int qnum) {
   for (int r = 1; r < size; r++) {
     // i++;
     if (r == rank) {
+      if (r==1) {
+        printf("File number mapping is: %s -> %d\n", doc1.c_str(), file_to_number_mapping[doc1]);
+        printf("File number mapping is: %s -> %d\n", doc2.c_str(), file_to_number_mapping[doc2]);
+      }
+      printf("Printing query %d from rank %d\n", qnum, rank);
       FILE *fp1;
       fp1 = fopen(filelist.c_str(), "w");
       for (int x = 0; x < v.size(); x++) {

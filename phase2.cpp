@@ -204,6 +204,12 @@ map<string, set<string> > slave_relevant_find(queue<pair<string, int> > &file_qu
             printf("Processing...\n");
 
           try {
+            printf("FILE: %s\n", file.c_str());
+            // char c[255];
+            // realpath(file.c_str(), c);
+            // file = string(c);
+            // // file = originaldir + file;
+            // printf("FILE: %s\n", file.c_str());
             rel = get_relevant_words(file);
 
             #pragma omp critical(mapupdate)

@@ -93,7 +93,7 @@ pair<string, set<string> > recv_file_keywords() {
   int src = ((rank - 1) == 0) ? (size - 1) : (rank - 1);
   int sz;
   char file[255];
-  char word[100];
+  char word[255];
 
   MPI_Recv(file, 255, MPI_CHAR, src, KEYWORD_TRANSFER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
   MPI_Recv(&sz, 1, MPI_INT, src, KEYWORD_TRANSFER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -103,7 +103,7 @@ pair<string, set<string> > recv_file_keywords() {
 
   while (sz--)
   {
-    MPI_Recv(word, 100, MPI_CHAR, src, KEYWORD_TRANSFER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    MPI_Recv(word, 255, MPI_CHAR, src, KEYWORD_TRANSFER, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     keyword_set.insert(string(word));
   }
   return make_pair(f, keyword_set);
