@@ -7,6 +7,7 @@
 #include "phase3.h"
 #include "phase1.h"
 #include "query.h"
+#include <time.h>
 
 using namespace std;
 
@@ -23,14 +24,43 @@ int main(int argc, char *argv[]) {
   // test_phase2_mpi();
 
   // test_send_and_receive();
+// /*
+  time_t start,end;
+
+  if (rank == 0) {
+    time (&start);
+  }
 
   run_phase1_mpi(argc, argv);
+
+  if (rank == 0) {
+    time (&end);
+    double diff = difftime (end,start);
+    printf("Phase 1 completed in %lf seconds\n", diff);
+    time (&start);
+  }
+
   // test_serial_traversal(argc, argv);
 
 
 
   run_phase2_mpi();
+
+  if (rank == 0) {
+    time (&end);
+    double diff = difftime (end,start);
+    printf("Phase 2 completed in %lf seconds\n", diff);
+    time (&start);
+  }
+
   run_phase3();
+
+  if (rank == 0) {
+    time (&end);
+    double diff = difftime (end,start);
+    printf("Phase 3 completed in %lf seconds\n", diff);
+  }
+
 
   // printf("TELLLLLLLLLLLLLL\n");
 
@@ -46,18 +76,41 @@ int main(int argc, char *argv[]) {
     if (qn == 1) {
       fscanf(fp1, "%s", q1);
       // printf("%s\n", q1);
+
+      if (rank == 0) {
+        time (&start);
+      }
+
       related_docs(string(q1), i);
+
+      if (rank == 0) {
+        time (&end);
+        double diff = difftime (end,start);
+        printf("Query %d completed in %lf seconds\n", i, diff);
+      }
     }
     else if (qn == 2) {
       fscanf(fp1, "%s", q1);
       // printf("%s\n", q1);
       fscanf(fp1, "%s", q2);
       // printf("%s\n", q2);
+
+      if (rank == 0) {
+        time (&start);
+      }
+
       common_to_both_docs(string(q1), string(q2), i);
+
+      if (rank == 0) {
+        time (&end);
+        double diff = difftime (end,start);
+        printf("Query %d completed in %lf seconds\n", i, diff);
+      }
     }
     i++;
   }
-
+// */
+  // test_serial_traversal(argc, argv);
   MPI_Finalize();
 }
 

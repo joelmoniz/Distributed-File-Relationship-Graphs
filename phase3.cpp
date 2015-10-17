@@ -313,11 +313,13 @@ void test_phase3() {
 
 void run_phase3() {
   get_file_integer_map();
+  printf("File integer mapping done @ rank %d\n", rank);
   external_list[1] = current_list;
 
   for (int i = 0; i < size; ++i)
   {
     transfer_graph_and_get_intersection(i);
+    printf("Process %d done with transer %d\n", rank, i+1);
 
     if (i == size - 1) {
       for (int r = 1; r < size; r++) {

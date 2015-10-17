@@ -41,8 +41,7 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
   // if (dir.find(".git") == string::npos)
 
   if ((dp = opendir(dir.c_str())) == NULL) {
-    // TODO: Figure out how to remove error
-    // fprintf(stderr, "cannot open directory: %s\n", dir.c_str());
+    fprintf(stderr, "cannot open directory: %s\n", dir.c_str());
     return;
   }
 
@@ -51,8 +50,18 @@ void get_subdir(string dir, queue<string> &textfile_list, queue<string> &dir_lis
   if (chdir(dir.c_str()) != 0)
     printf("err chdir");
   while ((entry = readdir(dp)) != NULL) {
-    lstat(entry->d_name, &statbuf);
-    if (S_ISDIR(statbuf.st_mode)) {
+    int errcode;
+
+    // TODO: Figure out why this condition keeps happening (file does not exist)
+    if ((errcode=lstat(entry->d_name, &statbuf)) == -1) {
+      // fprintf(stderr, "LSTAT ERROR: p %d entry:%s\n", rank, entry->d_name);
+      ;
+      // perror("LSAT ERROR:");
+    }
+
+    // HACK: It seems that if the file doesn't exist, it's a file not a folder. Adding this hacky 
+    // `errcode != -1` as a way to not skip files temporarily
+    if (errcode != -1 && S_ISDIR(statbuf.st_mode)) {
 
       if ((entry->d_name)[0] == '.' || strcmp("..", entry->d_name) == 0)
         continue;
@@ -159,6 +168,7 @@ vector<string> slave_file_discovery() {
     for (int i = 0; i < c; ++i)
     {
       MPI_Recv(fname, MAX_PATH_SIZE, MPI_CHAR, 0, MASTER_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+      printf("Slave %d received %s\n", rank, fname);
       dir_queue.push(string(fname));
     }
   }
@@ -266,7 +276,7 @@ vector<string> slave_file_discovery() {
           sleep(SLEEP_TIME);
         }
       }
-
+      printf("Done @ %d\n", rank);
       int x = 0;
       MPI_Status status;
       while (x != NEXT_PHASE_LOCKSTEP) {
@@ -349,6 +359,7 @@ void master_handle_distribution(int argc, char *argv[]) {
     for (int j = 0; j < nn; ++j)
     {
       MPI_Send(paths.front().c_str(), paths.front().length() + 1, MPI_CHAR, i, MASTER_TAG, MPI_COMM_WORLD);
+      printf("Master sending out: %s\n", paths.front().c_str());
       paths.pop();
     }
     file_size_left[i - 1] = make_pair(nn, i);
@@ -479,6 +490,8 @@ void run_phase1_mpi(int argc, char *argv[]) {
   else {
     v = slave_file_discovery();
   }
+
+  printf("Rank %d at barrier\n", rank);
 
   MPI_Barrier(MPI_COMM_WORLD);
 
